@@ -49,7 +49,6 @@ comaminimUn([],[]).
 comaminimUn([X|Xs],[1|CNF]):-X > 0, comaminimUn(Xs,CNF).
 comaminimUn([X|Xs],[0|CNF]):- X = 0, comaminimUn(Xs,CNF).
 
-
 %%%%%%%%%%%%%%%%%%%
 % comamoltUn(L,CNF)
 % Donat una llista de variables booleanes,
@@ -70,7 +69,12 @@ comaminimUn([X|Xs],[0|CNF]):- X = 0, comaminimUn(Xs,CNF).
 % -> I sera la CNF codificant posicions inicials i prohibides
 % ...
 fesTauler(N,PI,PP,V,I):-
-
+    NN is N*N,
+    llista(1,NN,L),
+    trosseja(L,N,V),
+    fixa(PI,N,F),
+    prohibeix(PP,N,P),
+    append(F,P,I).
 
 % AUX
 % llista(I,F,L)
@@ -78,7 +82,7 @@ fesTauler(N,PI,PP,V,I):-
 % -> el tercer parametre sera una llista de numeros d'inici a fi
 % ...
 llista(I,F,[]):- I>F, !.
-llista(I,F,[I|Xs]):- I=<F, I1 is I +1, llista(I1,F,Xs). 
+llista(I,F,[I|R]):- I=<F, I1 is I+1, llista(I1,F,R).
 
 % AUX
 % trosseja(L,N,LL)
@@ -86,18 +90,31 @@ llista(I,F,[I|Xs]):- I=<F, I1 is I +1, llista(I1,F,Xs).
 % -> LL sera la llista de N llistes de L amb la mateixa mida
 % (S'assumeix que la llargada de L i N ho fan possible)
 % ...
+trosseja([],_,[]):- !.
+trosseja(L,N,[F|R]):-
+    length(F,N),
+    append(F,L1,L),
+    trosseja(L1,N,R).
 
 % AUX
 % fixa(PI,N,F)
 % donada una llista de tuples de posicions PI i una mida de tauler N
 % -> F es la CNF fixant les corresponents variables de posicions a certa
 % ...
+fixa([],_,[]).
+fixa([(Fil,Col)|R],N,[[V]|RF]):-
+    V is (Fil-1)*N+Col,
+    fixa(R,N,RF).
 
 % AUX
 % prohibeix(PP,N,P)
 % donada una llista de tuples de posicions prohibides PP i una mida  tauler N
 % -> P es la CNF posant les corresponents variables de posicions a fals
 % ...
+prohibeix([],_,[]).
+prohibeix([(Fil,Col)|R],N,[[-V]|RP]):-
+    V is (Fil-1)*N+Col,
+    prohibeix(R,N,RP).
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % noAmenacesFiles(+V,F)
@@ -117,12 +134,12 @@ llista(I,F,[I|Xs]):- I=<F, I1 is I +1, llista(I1,F,Xs).
 % noAmenacesDiagonals(+N,C)
 % donada la mida del tauler,
 % -> D sera la CNF que codifiqui que no s'amenecen les reines de les mateixes diagonals
-noAmenacesDiagonals(N,D):-
-    diagonals(N,L), llistesDiagonalsAVars(L,N,VARS), ...
+%noAmenacesDiagonals(N,D):-
+%    diagonals(N,L), llistesDiagonalsAVars(L,N,VARS), ...
 
 
 % Genera les llistes de diagonals d'una matriu NxN. Cada diagonal es una llista de coordenades.
-diagonals(N,L):- diagonalsIn(1,N,L1), diagonals2In(1,N,L2), append(L1,L2,L).
+%diagonals(N,L):- diagonalsIn(1,N,L1), diagonals2In(1,N,L2), append(L1,L2,L).
 
 % diagonalsIn(D,N,L)
 % Generem les diagonals dalt-dreta a baix-esquerra, D es el numero de
@@ -173,20 +190,25 @@ coordenadesAVars([(F,C)|R],N,[V|RV]):-V is (F-1)*N+C, coordenadesAVars(R,N,RV).
 % codifica les restriccions del problema i en fa una formula
 % que la enviem a resoldre amb el SAT solver
 % i si te solucio en mostrem el tauler
-resol():-
-    ...
-    fesTauler(N,I,P,V,Ini),
-    minimNReines(V,FN),
-    ...
-    noAmenacesFiles(V,CNFfiles),
-    ...
-    noAmenacesColumnes(V,CNFcolumnes),
-    ...
-    noAmenacesDiagonals(N,CNFdiagonals),
-    ...
-    sat(...,[],...),
-    ...
-    mostraTauler(N,...).
+resol:-
+    write('Mida del tauler? '), read(N),
+    write('Posicions inicials? '), read(PI),
+    write('Posicions prohibides? '), read(PP),
+    fesTauler(N,PI,PP,V,Ini),
+    write('Variables tauler: '), write(V), nl,
+    write('CNF inicial: '), write(Ini), nl.
+    %fesTauler(N,PI,PP,V,Ini),
+    %minimNReines(V,FN),
+    %...
+    %noAmenacesFiles(V,CNFfiles),
+    %...
+    %noAmenacesColumnes(V,CNFcolumnes),
+    %...
+    %noAmenacesDiagonals(N,CNFdiagonals),
+    %...
+    %sat(...,[],...),
+    %...
+    %mostraTauler(N,...).
 
 
 %%%%%%%%%%%%%%%%%%%

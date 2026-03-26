@@ -70,6 +70,10 @@ comaminimUn([X|Xs],[0|CNF]):- X = 0, comaminimUn(Xs,CNF).
 % -> I sera la CNF codificant posicions inicials i prohibides
 % ...
 fesTauler(N,PI,PP,V,I):-
+    llista(1,N*N,V),
+    fixa(PI,N,R1),
+    prohibeix(PP,N,R2),
+    append(R1,R2,I).
 
 
 % AUX
@@ -86,18 +90,39 @@ llista(I,F,[I|Xs]):- I=<F, I1 is I +1, llista(I1,F,Xs).
 % -> LL sera la llista de N llistes de L amb la mateixa mida
 % (S'assumeix que la llargada de L i N ho fan possible)
 % ...
+trosseja(L,N,LL):-
+	length(L,Len),
+	CutSize is Len // N,
+	trosseja_aux(L,CutSize,LL),!.
+	
+% Genera una llista de N llistes de L amb la mateixa mida
+trosseja_aux([],_,[]).
+trosseja_aux(L,S,[X|LLs]):-
+	append(X,Y,L),
+	length(X,S),!,
+	trosseja_aux(Y,S,LLs).
 
 % AUX
 % fixa(PI,N,F)
 % donada una llista de tuples de posicions PI i una mida de tauler N
 % -> F es la CNF fixant les corresponents variables de posicions a certa
 % ...
+fixa([],_,[]).
+fixa([(F,C)|PIs],N,[[R]|Rs]):-
+	R is (F-1)*N + C,
+	R =< N**N,
+	fixa(PIs,N,Rs).
 
 % AUX
 % prohibeix(PP,N,P)
 % donada una llista de tuples de posicions prohibides PP i una mida  tauler N
 % -> P es la CNF posant les corresponents variables de posicions a fals
 % ...
+prohibeix([],_,[]).
+prohibeix([(F,C)|PPs],N,[[-R]|Rs]):-
+	R is (F-1)*N + C,
+	R =< N**N,
+	prohibeix(PPs,N,Rs).
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % noAmenacesFiles(+V,F)
@@ -174,8 +199,12 @@ coordenadesAVars([(F,C)|R],N,[V|RV]):-V is (F-1)*N+C, coordenadesAVars(R,N,RV).
 % que la enviem a resoldre amb el SAT solver
 % i si te solucio en mostrem el tauler
 resol():-
-    ...
+    write('Mida del tauler? '), read(N),
+    write('Posicions inicials? '), read(PI),
+    write('Posicions prohibides? '), read(PP),
     fesTauler(N,I,P,V,Ini),
+    write('Variables tauler: '), write(V), nl,
+    write('CNF inicial: '), write(Ini), nl.
     minimNReines(V,FN),
     ...
     noAmenacesFiles(V,CNFfiles),

@@ -76,13 +76,27 @@ fesTauler(N,PI,PP,V,I):-
     prohibeix(PP,N,P),
     append(F,P,I).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% fesTauler(+N,+PI,+PP,V,I)
+% Donat una dimensio de tauler N, unes posicions inicials PI i
+% unes prohibides PP
+% -> V sera el la llista de llistes variables necessaries per codificar el tauler
+% -> I sera la CNF codificant posicions inicials i prohibides
+% ...
+fesTauler1(N,PI,PP,V,I):-
+    llista(1,N*N,V),
+    fixa(PI,N,F),
+    prohibeix(PP,N,P),
+    append(F,P,I).
+
+
 % AUX
 % llista(I,F,L)
 % Donat un inici i un fi
 % -> el tercer parametre sera una llista de numeros d'inici a fi
 % ...
 llista(I,F,[]):- I>F, !.
-llista(I,F,[I|R]):- I=<F, I1 is I+1, llista(I1,F,R).
+llista(I,F,[I|Xs]):- I=<F, I1 is I +1, llista(I1,F,Xs). 
 
 % AUX
 % trosseja(L,N,LL)
@@ -90,11 +104,17 @@ llista(I,F,[I|R]):- I=<F, I1 is I+1, llista(I1,F,R).
 % -> LL sera la llista de N llistes de L amb la mateixa mida
 % (S'assumeix que la llargada de L i N ho fan possible)
 % ...
-trosseja([],_,[]):- !.
-trosseja(L,N,[F|R]):-
-    length(F,N),
-    append(F,L1,L),
-    trosseja(L1,N,R).
+trosseja(L,N,LL):-
+	length(L,Len),
+	CutSize is Len // N,
+	trosseja_aux(L,CutSize,LL),!.
+	
+% Genera una llista de N llistes de L amb la mateixa mida
+trosseja_aux([],_,[]).
+trosseja_aux(L,S,[X|LLs]):-
+	append(X,Y,L),
+	length(X,S),!,
+	trosseja_aux(Y,S,LLs).
 
 % AUX
 % fixa(PI,N,F)
@@ -102,9 +122,10 @@ trosseja(L,N,[F|R]):-
 % -> F es la CNF fixant les corresponents variables de posicions a certa
 % ...
 fixa([],_,[]).
-fixa([(Fil,Col)|R],N,[[V]|RF]):-
-    V is (Fil-1)*N+Col,
-    fixa(R,N,RF).
+fixa([(F,C)|PIs],N,[[R]|Rs]):-
+	R is (F-1)*N + C,
+	R =< N**N,
+	fixa(PIs,N,Rs).
 
 % AUX
 % prohibeix(PP,N,P)
@@ -112,9 +133,11 @@ fixa([(Fil,Col)|R],N,[[V]|RF]):-
 % -> P es la CNF posant les corresponents variables de posicions a fals
 % ...
 prohibeix([],_,[]).
-prohibeix([(Fil,Col)|R],N,[[-V]|RP]):-
-    V is (Fil-1)*N+Col,
-    prohibeix(R,N,RP).
+prohibeix([(F,C)|PPs],N,[[-R]|Rs]):-
+	R is (F-1)*N + C,
+	R =< N**N,
+	prohibeix(PPs,N,Rs).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % noAmenacesFiles(+V,F)
@@ -194,10 +217,10 @@ resol:-
     write('Mida del tauler? '), read(N),
     write('Posicions inicials? '), read(PI),
     write('Posicions prohibides? '), read(PP),
-    fesTauler(N,PI,PP,V,Ini),
+    fesTauler1(N,PI,PP,V,Ini),
     write('Variables tauler: '), write(V), nl,
     write('CNF inicial: '), write(Ini), nl.
-    %fesTauler(N,PI,PP,V,Ini),
+    
     %minimNReines(V,FN),
     %...
     %noAmenacesFiles(V,CNFfiles),

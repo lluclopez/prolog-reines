@@ -45,9 +45,7 @@ sat(... , ... ,M).
 % Donat una llista de variables booleanes,
 % -> el segon parametre sera la CNF que codifica que com a minim una sigui certa.
 % ...
-comaminimUn([],[]).
-comaminimUn([X|Xs],[1|CNF]):-X > 0, comaminimUn(Xs,CNF).
-comaminimUn([X|Xs],[0|CNF]):- X = 0, comaminimUn(Xs,CNF).
+comaminimUn(L,[L]).
 
 
 %%%%%%%%%%%%%%%%%%%
@@ -55,12 +53,25 @@ comaminimUn([X|Xs],[0|CNF]):- X = 0, comaminimUn(Xs,CNF).
 % Donat una llista de variables booleanes,
 % -> el segon parametre sera la CNF que codifica que com a molt una sigui certa.
 % ...
+comamoltUn([],[]).
+comamoltUn([L|Ls],Res):-
+	comamoltUn_aux(L,Ls,R),
+	comamoltUn(Ls,CNF),
+	append(R,CNF,Res).
+
+comamoltUn_aux(L,[],[]).
+comamoltUn_aux(L,[Ls|Lss],[[-L,-Ls]|R]):-
+	comamoltUn_aux(L,Lss,R).
 
 %%%%%%%%%%%%%%%%%%%
 % exactamentUn(L,CNF)
 % Donat una llista de variables booleanes,
 % -> el segon parametre sera la CNF que codifica que exactament una sigui certa.
 % ...
+exactamentUn(L,CNF):-
+	comaminimUn(L,R1),
+	comamoltUn(L,R2),
+	append(R1,R2,CNF).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % fesTauler(+N,+PI,+PP,V,I)
@@ -70,7 +81,8 @@ comaminimUn([X|Xs],[0|CNF]):- X = 0, comaminimUn(Xs,CNF).
 % -> I sera la CNF codificant posicions inicials i prohibides
 % ...
 fesTauler(N,PI,PP,V,I):-
-    llista(1,N*N,V),
+    llista(1,N*N,Vi),
+    trsojeja(Vi,N,VARS),
     fixa(PI,N,R1),
     prohibeix(PP,N,R2),
     append(R1,R2,I).
@@ -198,10 +210,10 @@ coordenadesAVars([(F,C)|R],N,[V|RV]):-V is (F-1)*N+C, coordenadesAVars(R,N,RV).
 % codifica les restriccions del problema i en fa una formula
 % que la enviem a resoldre amb el SAT solver
 % i si te solucio en mostrem el tauler
-resol():-
+resol:-
     write('Mida del tauler? '), read(N),
-    write('Posicions inicials? '), read(PI),
-    write('Posicions prohibides? '), read(PP),
+    write('Posicions inicials? '), read(I),
+    write('Posicions prohibides? '), read(P),
     fesTauler(N,I,P,V,Ini),
     write('Variables tauler: '), write(V), nl,
     write('CNF inicial: '), write(Ini), nl.

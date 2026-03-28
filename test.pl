@@ -1,3 +1,94 @@
+fesTauler(N,PI,PP,V,I):-
+    llista(1,N*N,Vi),
+    trosseja(Vi,N,V),
+    fixa(PI,N,R1),
+    prohibeix(PP,N,R2),
+    append(R1,R2,I).
+
+
+resol:-
+    write('Mida del tauler? '), read(N),
+    write('Posicions inicials? '), read(PI),
+    write('Posicions prohibides? '), read(PP),
+    fesTauler(N,I,P,V,Ini),
+    write('Variables tauler: '), write(V), nl,
+    write('CNF inicial: '), write(Ini), nl,
+	minimNReines(V,FN),
+	write('CNF de les minimNreines: '), write(FN), nl.
+
+
+%%%%%%%%%%%%%%%%%%%
+% comaminimUn(L,CNF)
+% Donat una llista de variables booleanes,
+% -> el segon parametre sera la CNF que codifica que com a minim una sigui certa.
+% ...
+comaminimUn(L,[L]).
+
+
+%%%%%%%%%%%%%%%%%%%
+% comamoltUn(L,CNF)
+% Donat una llista de variables booleanes,
+% -> el segon parametre sera la CNF que codifica que com a molt una sigui certa.
+% ...
+comamoltUn([],[]).
+comamoltUn([L|Ls],Res):-
+	comamoltUn_aux(L,Ls,R),
+	comamoltUn(Ls,CNF),
+	append(R,CNF,Res).
+
+comamoltUn_aux(L,[],[]).
+comamoltUn_aux(L,[Ls|Lss],[[-L,-Ls]|R]):-
+	comamoltUn_aux(L,Lss,R).
+	
+
+
+%%%%%%%%%%%%%%%%%%%
+% exactamentUn(L,CNF)
+% Donat una llista de variables booleanes,
+% -> el segon parametre sera la CNF que codifica que exactament una sigui certa.
+% ...
+exactamentUn(L,CNF):-
+	comaminimUn(L,R1),
+	comamoltUn(L,R2),
+	append(R1,R2,CNF).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% noAmenacesFiles(+V,F)
+% donada la matriu de variables,
+% -> F sera la CNF que codifiqui que no s'amenecen les reines de les mateixes files
+% ...
+%noAmenacesFiles(V,F) → cada fila: exactamentUn/2
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+% noAmenacesColumnes(+V,C)
+% donada la matriu de variables,
+% -> C sera la CNF que codifiqui que no s'amenecen les reines de les mateixes columnes
+% ...
+%noAmenacesColumnes(V,C) → cada columna: exactamentUn/2
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% noAmenacesDiagonals(+N,C)
+% donada la mida del tauler,
+% -> D sera la CNF que codifiqui que no s'amenecen les reines de les mateixes diagonals
+noAmenacesDiagonals(N,D):-
+    diagonals(N,L), llistesDiagonalsAVars(L,N,VARS), ...
+%més complicat: tens les diagonals generades per diagonals/2, després converteixes coordenades a variables i poses comamoltUn/2 per evitar més d’una reina a la diagonal
+
+%%%%%%%%%%%%%%%%%%%%%
+% minimNReines(+V,FN)
+% donada la matriu de variables (inicialment d'un tauler NxN),
+% -> FN sera la CNF que codifiqui que hi ha d'haver com a minim N reines al tauler
+% ...
+
+
 
 % AUX
 % llista(I,F,L)
@@ -56,16 +147,16 @@ prohibeix([(F,C)|PPs],N,[[-R]|Rs]):-
 % si F es satisfactible, M sera el model de F afegit a la interpretació I (a la primera crida I sera buida).
 % Assumim invariant que no hi ha literals repetits a les clausules ni la clausula buida inicialment.
 
-sat([],I,I):-     write('SAT!!'),nl,!.
-sat(CNF,I,M):-
+%sat([],I,I):-     write('SAT!!'),nl,!.
+%sat(CNF,I,M):-
 % Ha de triar un literal d’una clausula unitaria, si no n’hi ha cap, llavors un literal pendent qualsevol.
-decideix(CNF,Lit),
+%decideix(CNF,Lit),
 
 % Simplifica la CNF amb el Lit triat (compte pq pot fallar, es a dir si troba la clausula buida fallara i fara backtraking).
-simplif(Lit,CNF,CNFS),
+%simplif(Lit,CNF,CNFS).
 
 % crida recursiva amb la CNF i la interpretacio actualitzada
-sat(... , ... ,M).
+%sat(... , ... ,M).
 
 
 %%%%%%%%%%%%%%%%%%

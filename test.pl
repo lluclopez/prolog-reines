@@ -14,7 +14,9 @@ resol:-
     write('Variables tauler: '), write(V), nl,
     write('CNF inicial: '), write(Ini), nl,
 	minimNReines(V,FN),
-	write('CNF de les minimNreines: '), write(FN), nl.
+	write('CNF de les minimNreines: '), write(FN), nl,
+	noAmenacesFiles(V,CNFfiles),
+	write('CNF de les amenaces de files: '), write(CNFfiles), nl.
 
 
 %%%%%%%%%%%%%%%%%%%
@@ -57,35 +59,98 @@ exactamentUn(L,CNF):-
 %%%%%%%%%%%%%%%%%%%%%%%
 % noAmenacesFiles(+V,F)
 % donada la matriu de variables,
-% -> F sera la CNF que codifiqui que no s'amenecen les reines de les mateixes files
+% -> F sera la CNF que codifiqui que no samenecen les reines de les mateixes files
 % ...
+noAmenacesFiles([],[]).
+noAmenacesFiles([L|Ls],R):-
+	exactamentUn(L,CNF),
+	noAmenacesFiles(Ls,F),
+	append(CNF,F,R).
 %noAmenacesFiles(V,F) → cada fila: exactamentUn/2
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 % noAmenacesColumnes(+V,C)
 % donada la matriu de variables,
-% -> C sera la CNF que codifiqui que no s'amenecen les reines de les mateixes columnes
+% -> C sera la CNF que codifiqui que no samenecen les reines de les mateixes columnes
 % ...
-%noAmenacesColumnes(V,C) → cada columna: exactamentUn/2
+noAmenacesColumnes(V,CNF):-
+    length(V,N),
+    noAmenacesColumnes_aux(V,1,N,CNF).
 
+noAmenacesColumnes_aux(_,I,N,[]) :- I > N, !.
+noAmenacesColumnes_aux(V,I,N,Res):-
+    columna(V,I,Col),
+    exactamentUn(Col,CNFcol),
+    I2 is I+1,
+    noAmenacesColumnes_aux(V,I2,N,CNFrest),
+    append(CNFcol,CNFrest,Res).
 
-
+columna(V,I,Col):-
+    I1 is I-1,
+    findall(X,
+        (
+            member(Fila,V),
+            length(Abans,I1),
+            append(Abans,[X|_],Fila)
+        ),
+    Col).
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 % noAmenacesDiagonals(+N,C)
 % donada la mida del tauler,
-% -> D sera la CNF que codifiqui que no s'amenecen les reines de les mateixes diagonals
+% -> D sera la CNF que codifiqui que no samenecen les reines de les mateixes diagonals
 noAmenacesDiagonals(N,D):-
     diagonals(N,L), llistesDiagonalsAVars(L,N,VARS), ...
-%més complicat: tens les diagonals generades per diagonals/2, després converteixes coordenades a variables i poses comamoltUn/2 per evitar més d’una reina a la diagonal
+
+
+% Genera les llistes de diagonals d'una matriu NxN. Cada diagonal es una llista de coordenades.
+diagonals(N,L):- diagonalsIn(1,N,L1), diagonals2In(1,N,L2), append(L1,L2,L).
+
+
+
+
+diagonalsIn(D,N,[]):-D is 2*N,!.
+diagonalsIn(D,N,[L1|L]):- D=<N,fesDiagonal(1,D,L1), D1 is D+1, diagonalsIn(D1,N,L).
+diagonalsIn(D,N,[L1|L]):- D>N, F is D-N+1,fesDiagonalReves(F,N,N,L1), D1 is D+1, diagonalsIn(D1,N,L).
+
+fesDiagonal(F,1,[(F,1)]):- !.
+fesDiagonal(F,C,[(F,C)|R]):- F1 is F+1, C1 is C-1, fesDiagonal(F1,C1,R).
+
+% quan la fila es N parem
+fesDiagonalReves(N,C,N,[(N,C)]):-!.
+fesDiagonalReves(F,C,N,[(F,C)|R]):-F1 is F+1, C1 is C-1, fesDiagonalReves(F1,C1,N,R).
+
+
+
+% diagonals2In(D,N,L)
+% Generem les diagonals baix-dreta a dalt-esquerra
+% Exemple
+% ?- diagonals2In(1,3,L).
+% L = [[(3,1)],[(3,2),(2,1)],[(3,3),(2,2),(1,1)],[(2,3),(1,2)],[(1,3)]]
+% ...
+
+% Passa una llista de coordenades  de tauler NxN a variables corresponents.
+coordenadesAVars([],_,[]).
+coordenadesAVars([(F,C)|R],N,[V|RV]):-V is (F-1)*N+C, coordenadesAVars(R,N,RV).
+
+% Passa una llista de diagonals a llistes de llistes de variables
+%llistesDiagonalsAVars(Lparells,N,Lvars).
+%...
 
 %%%%%%%%%%%%%%%%%%%%%
 % minimNReines(+V,FN)
 % donada la matriu de variables (inicialment d'un tauler NxN),
 % -> FN sera la CNF que codifiqui que hi ha d'haver com a minim N reines al tauler
+% ...
+
+
+%%%%%%%%%%%%%%%%%%%%%
+% minimNReines(+V,FN)
+% donada la matriu de variables (inicialment d'un tauler NxN),
+% -> FN sera la CNF que codifiqui que hi ha dhaver com a minim N reines al tauler
 % ...
 
 

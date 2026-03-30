@@ -141,12 +141,38 @@ prohibeix([(F,C)|PPs],N,[[-R]|Rs]):-
 % donada la matriu de variables,
 % -> F sera la CNF que codifiqui que no s'amenecen les reines de les mateixes files
 % ...
+noAmenacesFiles([],[]).
+noAmenacesFiles([L|Ls],R):-
+	exactamentUn(L,CNF),
+	noAmenacesFiles(Ls,F),
+	append(CNF,F,R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 % noAmenacesColumnes(+V,C)
 % donada la matriu de variables,
 % -> C sera la CNF que codifiqui que no s'amenecen les reines de les mateixes columnes
 % ...
+noAmenacesColumnes(V,CNF):-
+    length(V,N),
+    noAmenacesColumnes_aux(V,1,N,CNF).
+
+noAmenacesColumnes_aux(_,I,N,[]) :- I > N, !.
+noAmenacesColumnes_aux(V,I,N,Res):-
+    columna(V,I,Col),
+    exactamentUn(Col,CNFcol),
+    I2 is I+1,
+    noAmenacesColumnes_aux(V,I2,N,CNFrest),
+    append(CNFcol,CNFrest,Res).
+
+columna(V,I,Col):-
+    I1 is I-1,
+    findall(X,
+        (
+            member(Fila,V),
+            length(Abans,I1),
+            append(Abans,[X|_],Fila)
+        ),
+    Col).
 
 % AQUEST PREDICAT ESTA PARCIALMENT FET. CAL QUE CALCULEU LES "ALTRES"
 % DIAGONALS

@@ -3,7 +3,7 @@
 % si F es satisfactible, M sera el model de F afegit a la interpretació I (a la primera crida I sera buida).
 % Assumim invariant que no hi ha literals repetits a les clausules ni la clausula buida inicialment.
 
-sat([],I,I):-     write('SAT!!'),nl,!.
+sat([],I,I):- write('SAT!!'),nl,!.
 sat(CNF,I,M):-
 % Ha de triar un literal d’una clausula unitaria, si no n’hi ha cap, llavors un literal pendent qualsevol.
 decideix(CNF,Lit),
@@ -12,8 +12,15 @@ decideix(CNF,Lit),
 simplif(Lit,CNF,CNFS),
 
 % crida recursiva amb la CNF i la interpretacio actualitzada
-sat(... , ... ,M).
+sat(CNFS,[Lit|I],M).
 
+
+% Cas base
+sat(CNF,I,M):-
+    decideix(CNF,Lit),
+    Lit2 is -Lit,
+    simplif(Lit2,CNF,CNFS),
+    sat(CNFS,[Lit2|I],M).
 
 %%%%%%%%%%%%%%%%%%
 % decideix(F, Lit)
@@ -22,6 +29,12 @@ sat(... , ... ,M).
 %  - si hi ha una clausula unitaria sera aquest literal, sino
 %  - un qualsevol o el seu negat.
 % ...
+decideix(CNF,Lit):-
+    member([Lit],CNF), !.
+
+decideix(CNF,Lit):-
+    member(Cl,CNF),
+    member(Lit,Cl), !.
 
 %%%%%%%%%%%%%%%%%%%%%
 % simlipf(Lit, F, FS)
@@ -30,6 +43,27 @@ sat(... , ... ,M).
 %  - sense les clausules que tenen lit
 %  - treient -Lit de les clausules on hi es, si apareix la clausula buida fallara.
 % ...
+simplif(_,[],[]).
+
+simplif(Lit,[Cl|Cls],Res):-
+    member(Lit,Cl), !,
+    simplif(Lit,Cls,Res).
+
+simplif(Lit,[Cl|Cls],[Cl2|Res]):-
+    LitNeg is -Lit,
+    elimina(LitNeg,Cl,Cl2),
+    Cl2 \= [],
+    simplif(Lit,Cls,Res).
+
+% Auxiliar
+% elimina(X,L,R)
+elimina(_,[],[]).
+
+elimina(X,[X|Xs],R):- !,
+    elimina(X,Xs,R).
+
+elimina(X,[Y|Ys],[Y|R]):-
+    elimina(X,Ys,R).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -228,6 +262,7 @@ coordenadesAVars([(F,C)|R],N,[V|RV]):-V is (F-1)*N+C, coordenadesAVars(R,N,RV).
 % donada la matriu de variables (inicialment d'un tauler NxN),
 % -> FN sera la CNF que codifiqui que hi ha d'haver com a minim N reines al tauler
 % ...
+minimNReines(_,[]).
 
 
 %%%%%%%%%
@@ -243,17 +278,17 @@ resol:-
     fesTauler(N,I,P,V,Ini),
     write('Variables tauler: '), write(V), nl,
     write('CNF inicial: '), write(Ini), nl.
-    minimNReines(V,FN),
-    ...
-    noAmenacesFiles(V,CNFfiles),
-    ...
-    noAmenacesColumnes(V,CNFcolumnes),
-    ...
-    noAmenacesDiagonals(N,CNFdiagonals),
-    ...
-    sat(...,[],...),
-    ...
-    mostraTauler(N,...).
+    minimNReines(V,FN).
+    % ...
+    % noAmenacesFiles(V,CNFfiles),
+    % ...
+    % noAmenacesColumnes(V,CNFcolumnes),
+    % ...
+    % noAmenacesDiagonals(N,CNFdiagonals),
+    % ...
+    % sat(...,[],...),
+    % ...
+    % mostraTauler(N,...).
 
 
 %%%%%%%%%%%%%%%%%%%

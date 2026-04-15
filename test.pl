@@ -201,36 +201,71 @@ noAmenacesColumnes_aux([],[]).
 % -> D sera la CNF que codifiqui que no samenecen les reines de les mateixes diagonals
 %noAmenacesDiagonals(N,D):-
     %diagonals(N,L), llistesDiagonalsAVars(L,N,VARS), ...
-%més complicat: tens les diagonals generades per diagonals/2, després converteixes coordenades a variables i poses comamoltUn/2 per evitar més d’una reina a la diagonal
-noAmenacesDiagonals(N,CNF):-
-    diagonals(N,L),
-    llistesDiagonalsAVars(L,N,LV),
-    filtraDiagonals(LV,LF),
-    noAmenacesDiagonals_aux(LF,CNF).
-
-noAmenacesDiagonals_aux([],[]).
-noAmenacesDiagonals_aux([D|Ds],Res):-
-    comamoltUn(D,CNFd),
-    noAmenacesDiagonals_aux(Ds,R),
-    append(CNFd,R,Res).
-
-llistesDiagonalsAVars([],_,[]).
-llistesDiagonalsAVars([L|Ls],N,[V|Vs]):-
-    coordenadesAVars(L,N,V),
-    llistesDiagonalsAVars(Ls,N,Vs).
+%mes complicat: tens les diagonals generades per diagonals/2, després converteixes coordenades a variables i poses comamoltUn/2 per evitar mes duna reina a la diagonal
+noAmenacesDiagonals(N, D):-
+    diagonals(N, L), 
+    llistesDiagonalsAVars(L, N, VARS), 
+    protegeixDiagonals(VARS, D). 
 
 
-filtraDiagonals([],[]).
-filtraDiagonals([D|Ds],[D|R]):-
-    length(D,L),
-    L > 1, !,
-    filtraDiagonals(Ds,R).
-filtraDiagonals([_|Ds],R):-
-    filtraDiagonals(Ds,R).
+% Genera les llistes de diagonals d'una matriu NxN. Cada diagonal es una llista de coordenades.
+diagonals(N, L):- diagonalsIn(1, N, L1), diagonals2In(1, N, L2), append(L1, L2, L).
+
+% diagonalsIn(D,N,L)
+% Generem les diagonals dalt-dreta a baix-esquerra, D es el numero de
+% diagonals, N la mida del tauler i L seran les diagonals generades
+% Exemple:
+% ?- diagonalsIn(1,3,L).
+% L = [[(1,1)],[(1,2),(2,1)],[(1,3),(2,2),(3,1)],[(2,3),(3,2)],[(3,3)]]
+% Evidentment les diagonals amb una sola coordenada les ignorarem...
+
+diagonalsIn(D, N, []) :- D is 2*N, !.
+diagonalsIn(D, N, [L1|L]) :- D =< N, fesDiagonal(1, D, L1), D1 is D+1, diagonalsIn(D1, N, L).
+diagonalsIn(D, N, [L1|L]) :- D > N, F is D-N+1, fesDiagonalReves(F, N, N, L1), D1 is D+1, diagonalsIn(D1, N, L).
+
+fesDiagonal(F, 1, [(F,1)]) :- !.
+fesDiagonal(F, C, [(F,C)|R]) :- F1 is F+1, C1 is C-1, fesDiagonal(F1, C1, R).
+
+% quan la fila es N parem
+fesDiagonalReves(N, C, N, [(N,C)]) :- !.
+fesDiagonalReves(F, C, N, [(F,C)|R]) :- F1 is F+1, C1 is C-1, fesDiagonalReves(F1, C1, N, R).
+
+
+% diagonals2In(D,N,L)
+% Generem les diagonals baix-dreta a dalt-esquerra
+diagonals2In(D, N, []) :- D is 2*N, !.
+diagonals2In(D, N, [L1|L]) :- D =< N, fes2Diagonal(1, D, N, L1), D1 is D+1, diagonals2In(D1, N, L).
+diagonals2In(D, N, [L1|L]) :- D > N, F is D-N+1, fesDiagonal2Reves(F, 1, N, L1), D1 is D+1, diagonals2In(D1, N, L).
+
+fes2Diagonal(F, N, N, [(F,N)]) :- !.
+fes2Diagonal(F, C, N, [(F,C)|R]) :- F1 is F+1, C1 is C+1, fes2Diagonal(F1, C1, N, R).
+
+% quan la fila es N parem
+fesDiagonal2Reves(N, C, N, [(N,C)]) :- !.
+fesDiagonal2Reves(F, C, N, [(F,C)|R]) :- F1 is F+1, C1 is C+1, fesDiagonal2Reves(F1, C1, N, R).
+
+
+% Passa una llista de coordenades de tauler NxN a variables corresponents.
+coordenadesAVars([], _, []).
+coordenadesAVars([(F,C)|R], N, [V|RV]) :- V is (F-1)*N+C, coordenadesAVars(R, N, RV).
+
+
+% Passa una llista de diagonals a llistes de llistes de variables
+llistesDiagonalsAVars([], _, []).
+llistesDiagonalsAVars([Diagonal | RestaDiagonals], N, [VarsDiagonal | RestaVars]):- 
+    coordenadesAVars(Diagonal, N, VarsDiagonal),
+    llistesDiagonalsAVars(RestaDiagonals, N, RestaVars).
+
+% Aplica comamoltUn a cada diagonal de la llista i ho junta tot a D
+protegeixDiagonals([], []). 
+protegeixDiagonals([Cap | Cua], D):- 
+    comamoltUn(Cap, D_Cap), 
+    protegeixDiagonals(Cua, D_cua), 
+    append(D_Cap, D_cua, D).
 
 %%%%%%%%%%%%%%%%%%%%%
 % minimNReines(+V,FN)
-% donada la matriu de variables (inicialment d'un tauler NxN),
+% donada la matriu de variables (inicialment dun tauler NxN),
 % -> FN sera la CNF que codifiqui que hi ha dhaver com a minim N reines al tauler
 % ...
 minimNReines(_,[]).
@@ -239,7 +274,7 @@ minimNReines(_,[]).
 % AUX
 % llista(I,F,L)
 % Donat un inici i un fi
-% -> el tercer parametre sera una llista de numeros d'inici a fi
+% -> el tercer parametre sera una llista de numeros dinici a fi
 % ...
 llista(I,F,[]):- I>F, !.
 llista(I,F,[I|Xs]):- I=<F, I1 is I +1, llista(I1,F,Xs). 
@@ -247,7 +282,7 @@ llista(I,F,[I|Xs]):- I=<F, I1 is I +1, llista(I1,F,Xs).
 % trosseja(L,N,LL)
 % Donada una llista (L) i el numero de trossos que en volem (N)
 % -> LL sera la llista de N llistes de L amb la mateixa mida
-% (S'assumeix que la llargada de L i N ho fan possible)
+% (Sassumeix que la llargada de L i N ho fan possible)
 % ...
 trosseja(L,N,LL):-
 	length(L,Len),

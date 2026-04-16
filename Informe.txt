@@ -1,0 +1,24 @@
+Predicats auxiliars utilitzats:
+    - elimina(X,L,R) treu totes les aparicions de X a la llista L i el resultat el posa a R
+    - comamoltUn_aux(L,Ls,R) donada una variable i una llista de variables, genera la CNF que codifica que no poden ser certes al mateix temps
+    - trosseja_aux(L,CutSize,LL) Donada una llista L i una mida de trossos CutSize, LL sera la llista de trossos de L que tenen mida CutSize
+    - extreuColumna(Matriu, Columna, RestaMatriu) donada una matriu, extreu la primera columna i deixa la resta de la matriu
+    - literalsPositius(L,Pos) donada una llista de literals (L), retorna una llista amb els literals positius (Pos).
+
+
+
+
+
+
+
+Dificultats
+
+    A l'hora de fer predicats com comamoltUn o prohibeix que poden generar variables negades a la CNF resultant, ens vam trobar que de la manera en que posavem el '-' a la variable, prolog ho afegia com '- ( 2 )' enlloc de '-2', i vam haver de fer que la variable que acabaria a la CNF resultat unifiqués amb -2, per això vam afegir als predicats 'NL is -L,'.
+
+    Inicialment vam fer una implementació de minimNReines:
+            minimNReines([],[]).
+            minimNReines([Cap|Cua],FN):-
+                comaminimUn(Cap,L),
+                minimNReines(Cua,FNRestant),
+                append(L,FNRestant,FN).
+    Però ens vam adonar que la propia matriu de variables ja és una CNF que codifica que com a minim hi haura una reina a cada fila.

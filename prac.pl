@@ -279,11 +279,7 @@ protegeixDiagonals([Cap | Cua], D):-
 % donada la matriu de variables (inicialment d'un tauler NxN),
 % -> FN sera la CNF que codifiqui que hi ha d'haver com a minim N reines al tauler
 % ...
-minimNReines([],[]).
-minimNReines([Cap|Cua],FN):-
-    comaminimUn(Cap,L),
-    minimNReines(Cua,FNRestant),
-    append(L,FNRestant,FN).
+minimNReines(X,X).
 
 
 %%%%%%%%%
@@ -323,7 +319,7 @@ resol:-
     literalsPositius(M,Pos),
     mostraTauler(N,Pos),
     nl,
-    fail.
+    fail. % Una vegada ha trobat una solució, fail per a què faci backtracking i en trobi una altra.
 
 literalsPositius([],[]).
 literalsPositius([X|Xs],[X|R]):- X > 0, !, literalsPositius(Xs,R).
@@ -350,29 +346,32 @@ literalsPositius([_|Xs],R):- literalsPositius(Xs,R).
 mostraTauler(N,M):-
     mostraFiles(1,N,N,M).
 
+% Cas base: si la fila actual (F) supera la mida del tauler (N), vol dir que hem acabat de dibuixar.
 mostraFiles(F,N,_,_):- F > N, !.
-mostraFiles(F,N,Size,M):-
-    mostraSeparador(Size),
+mostraFiles(F,N,Size,M):- % Per a cada fila, dibuixem primer la línia separadora superior,
+    mostraSeparador(Size), % després omplim les columnes d'esquerra a dreta, i finalment fem la crida recursiva incrementant l'índex de la fila.
     mostraColumnes(F,1,Size,M),
     F1 is F+1,
     mostraFiles(F1,N,Size,M).
 
-mostraSeparador(0):- nl.
-mostraSeparador(N):-
-    N > 0,
+% Cas base: quan hem dibuixat els N blocs, fem un salt de línia.
+mostraSeparador(0):- nl. % Es podria posar un ! aqui tambe en comptes de N>0.
+mostraSeparador(N):- % Dibuixa un tram de la línia separadora i crida recursivament.
+    N > 0, % Sense aquesta restricció, el predicat entraria en un bucle infinit perquè N unifica amb infinits valors negatius.
     write('---'),
     N1 is N-1,
     mostraSeparador(N1).
 
+% Cas base: si la columna actual supera l'amplada,tanquem la casella amb el pal vertical dret i fem un salt de línia.
 mostraColumnes(_,C,N,_):- C > N, write('|'), nl, !.
 mostraColumnes(F,C,N,M):-
-    Pos is (F-1)*N + C,
+    Pos is (F-1)*N + C, % convertim les coordenades de matriu 2D (Fila, Columna) al seu índex Pos.
     write('|'),
     mostraCasella(Pos,M),
     C1 is C+1,
     mostraColumnes(F,C1,N,M).
 
-mostraCasella(Pos,M):-
+mostraCasella(Pos,M):- % Comprova si a la posició actual hi va una reina.
     member(Pos,M), !,
     write('Q').
 mostraCasella(_, _):-

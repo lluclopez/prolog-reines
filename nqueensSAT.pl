@@ -15,14 +15,6 @@ simplif(Lit,CNF,CNFS),
 % crida recursiva amb la CNF i la interpretacio actualitzada
 sat(CNFS,[Lit|I],M).
 
-% Camí alternatiu, si Lit ha fallat, llavors el seu negatiu ha de ser cert.
-sat(CNF,I,M):-
-    decideix(CNF,Lit),
-    Lit2 is -Lit,
-    simplif(Lit2,CNF,CNFS),
-    sat(CNFS,[Lit2|I],M).
-
-
 %%%%%%%%%%%%%%%%%%
 % decideix(F, Lit)
 % Donat una CNF,
@@ -30,11 +22,11 @@ sat(CNF,I,M):-
 %  - si hi ha una clausula unitaria sera aquest literal, sino
 %  - un qualsevol o el seu negat.
 % ...
-decideix(CNF,Lit):-
-    member([Lit],CNF), !.
-decideix(CNF,Lit):-
-    member(Cl,CNF),
-    member(Lit,Cl), !.
+decideix(CNF, Lit) :- % Clausula unitària
+    member([Lit], CNF), !.
+decideix([[L|_] | _], L). % primer literal
+decideix([[L|_] | _], Lit) :- % primer literal negat
+    Lit is -L.
 
 %%%%%%%%%%%%%%%%%%%%%
 % simlipf(Lit, F, FS)
@@ -468,7 +460,7 @@ test_resol4x4 :-
     mostraTauler(N,Pos).
 
 % test resol amb posicions inicials
-% fixa una reina a (1,1)
+% fixa una reina a (1,1), resposta esperada ha de ser no.
 test_resol_inicials :-
     N = 4,
     I = [(1,1)],
